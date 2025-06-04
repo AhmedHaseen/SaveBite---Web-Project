@@ -51,6 +51,144 @@
         </nav>
       </div>
     </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+        <div class="sidebar-user">
+          <div class="user-avatar">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="user-info">
+            <h3 id="admin-name">Admin User</h3>
+            <p id="admin-email">admin@example.com</p>
+            <span class="admin-badge">Administrator</span>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li class="active" data-tab="dashboard">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+            </li>
+            <li data-tab="users"><i class="fas fa-users"></i> Users</li>
+            <li data-tab="listings"><i class="fas fa-list"></i> Listings</li>
+            <li data-tab="orders">
+              <i class="fas fa-shopping-bag"></i> Orders
+            </li>
+            <li data-tab="reports"><i class="fas fa-chart-bar"></i> Reports</li>
+            <li data-tab="settings"><i class="fas fa-cog"></i> Settings</li>
+          </ul>
+        </nav>
+      </aside>
+
+        <main class="admin-content">
+            <section id="dashboard" class="admin-tab active">
+          <h2>Admin Dashboard</h2>
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="total-users">0</h3>
+                <p>Total Users</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-store"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="total-businesses">0</h3>
+                <p>Businesses</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-apple-alt"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="total-listings">0</h3>
+                <p>Active Listings</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
+              </div>
+              <div class="stat-info">
+                <h3 id="total-orders">0</h3>
+                <p>Orders Placed</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-container">
+            <div class="chart-card">
+              <h3>Food Saved by Category</h3>
+              <div class="chart-placeholder">
+                <div class="chart-bars">
+                  <div
+                    class="chart-bar"
+                    style="height: 70%"
+                    data-label="Meals"
+                    data-value="420 kg"
+                  ></div>
+                  <div
+                    class="chart-bar"
+                    style="height: 45%"
+                    data-label="Bakery"
+                    data-value="270 kg"
+                  ></div>
+                  <div
+                    class="chart-bar"
+                    style="height: 85%"
+                    data-label="Produce"
+                    data-value="510 kg"
+                  ></div>
+                  <div
+                    class="chart-bar"
+                    style="height: 30%"
+                    data-label="Dairy"
+                    data-value="180 kg"
+                  ></div>
+                  <div
+                    class="chart-bar"
+                    style="height: 20%"
+                    data-label="Other"
+                    data-value="120 kg"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3>Monthly Orders</h3>
+              <div class="chart-placeholder">
+                <div class="chart-line">
+                  <svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+                    <polyline
+                      points="0,150 50,120 100,100 150,80 200,40 250,60 300,30"
+                      fill="none"
+                      stroke="#2E7D32"
+                      stroke-width="3"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-activity">
+            <h3>Recent System Activity</h3>
+            <div class="activity-list" id="admin-activity-list">
+              <!-- Will be populated dynamically -->
+            </div>
+          </div>
+        </section>
+        </main>
+
+        
+    </div>
     
 </body>
 </html>
