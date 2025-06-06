@@ -831,3 +831,315 @@ class AdminService {
             `;
     }
   }
+
+ /**
+   * View listing details
+   * @param {string} listingId - Listing ID
+   */
+  viewListing(listingId) {
+    // Redirect to listings page with listing ID
+    window.location.href = `listings.html?id=${listingId}`;
+  }
+
+  /**
+   * Remove a listing
+   * @param {string} listingId - Listing ID
+   */
+  async removeListing(listingId) {
+    try {
+      // Confirm removal
+      if (
+        !confirm(
+          "Are you sure you want to remove this listing? This action cannot be undone."
+        )
+      ) {
+        return;
+      }
+
+      const result = await apiService.deleteListing(listingId);
+
+      if (result.success) {
+        showNotification("Listing removed successfully", "success");
+
+        // Reload listings
+        this.loadListingsData();
+      } else {
+        showNotification(result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error removing listing:", error);
+      showNotification("Error removing listing", "error");
+    }
+  }
+
+  /**
+   * Load orders tab data
+   */
+  async loadOrdersData() {
+    const ordersContainer = document.getElementById("admin-orders-container");
+    if (!ordersContainer) return;
+
+    // Show loading state
+    ordersContainer.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+        `;
+
+    try {
+      // Get filter value
+      const filter = document.getElementById("admin-orders-filter");
+      const filterValue = filter ? filter.value : "all";
+
+      // Get search value
+      const search = document.getElementById("admin-orders-search");
+      const searchValue = search ? search.value : "";
+
+      // Get orders
+      const orders = await apiService.getOrders({
+        status: filterValue !== "all" ? filterValue : "",
+        search: searchValue,
+      });
+
+      if (orders.length === 0) {
+        ordersContainer.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h3>No orders found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                `;
+        return;
+      }
+
+      // Generate orders HTML
+      let ordersHTML = "";
+
+      orders.forEach((order) => {
+        // Get status class
+        let statusClass = "";
+        switch (order.status) {
+          case "pending":
+            statusClass = "pending";
+            break;
+          case "completed":
+            statusClass = "completed";
+            break;
+          case "cancelled":
+            statusClass = "cancelled";
+            break;
+        }
+
+        ordersHTML += `
+                    <div class="admin-order-card">
+                        <div class="admin-order-header">
+                            <span class="admin-order-id">Order #${order.id
+                              .substring(0, 8)
+                              .toUpperCase()}</span>
+                            <span class="admin-order-status ${statusClass}">${
+          order.status.charAt(0).toUpperCase() + order.status.slice(1)
+        }</span>
+                        </div>
+                        
+                        <div class="admin-order-customer">
+                            <h4><i class="fas fa-user"></i> Customer</h4>
+                            <p>${order.customerName}</p>
+                            <p>${order.customerEmail}</p>
+                            <p>${order.customerPhone || "No phone provided"}</p>
+                        </div>
+                        
+                        <div class="admin-order-business">
+                            <h4><i class="fas fa-store"></i> Pickup Location</h4>
+                            <p>${order.pickupLocationName}</p>
+                            <p>${order.pickupAddress}</p>
+                            <p><strong>Pickup Time:</strong> ${formatDate(
+                              order.pickupTime,
+                              true
+                            )}</p>
+                        </div>
+                        
+                        <div class="admin-order-details">
+                            <h4>Order Details</h4>
+                            ${order.items
+                              .map(
+                                (item) => `
+                                <div class="admin-order-item">
+                                    <span>${item.name} x${item.quantity}</span>
+                                    <span>${formatPrice(
+                                      item.discountedPrice * item.quantity
+                                    )}</span>
+                                </div>
+                            `
+                              )
+                              .join("")}
+                            <div class="admin-order-total">
+                                <span>Total</span>
+                                <span>${formatPrice(order.total)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+      });
+
+      // Update orders container
+      ordersContainer.innerHTML = ordersHTML;
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      ordersContainer.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading orders</h3>
+                    <p>Please try again later</p>
+                </div>
+            `;
+    }
+  }
+
+  /**
+   * Load reports tab data
+   */
+  loadReportsData() {
+    // Most data is already loaded in loadAdminData
+    // Load report tables
+    this.loadReportTables();
+  }
+
+  /**
+   * Load report tables with sample data
+   */
+  loadReportTables() {
+    // This is a placeholder with sample data
+    // In a real app, this would fetch actual data from the API
+
+    // Top businesses table
+    const topBusinessesTable = document.getElementById("top-businesses-table");
+    if (topBusinessesTable) {
+      topBusinessesTable.innerHTML = `
+                <tr>
+                    <td>Green Garden Cafe</td>
+                    <td>42</td>
+                    <td>115</td>
+                    <td>$2,345.50</td>
+                </tr>
+                <tr>
+                    <td>Fresh Bakery</td>
+                    <td>38</td>
+                    <td>95</td>
+                    <td>$1,876.25</td>
+                </tr>
+                <tr>
+                    <td>Sunny Grocery</td>
+                    <td>31</td>
+                    <td>82</td>
+                    <td>$1,540.75</td>
+                </tr>
+            `;
+    }
+
+    // Popular categories table
+    const popularCategoriesTable = document.getElementById(
+      "popular-categories-table"
+    );
+    if (popularCategoriesTable) {
+      popularCategoriesTable.innerHTML = `
+                <tr>
+                    <td>Bakery</td>
+                    <td>112</td>
+                    <td>38%</td>
+                </tr>
+                <tr>
+                    <td>Prepared Meals</td>
+                    <td>95</td>
+                    <td>32%</td>
+                </tr>
+                <tr>
+                    <td>Produce</td>
+                    <td>65</td>
+                    <td>22%</td>
+                </tr>
+                <tr>
+                    <td>Dairy</td>
+                    <td>24</td>
+                    <td>8%</td>
+                </tr>
+            `;
+    }
+  }
+
+  /**
+   * Load settings tab data
+   */
+  loadSettingsData() {
+    // Set up form submissions
+    this.setupSettingsForms();
+  }
+
+  /**
+   * Set up settings forms
+   */
+  setupSettingsForms() {
+    // General settings form
+    const generalSettingsForm = document.getElementById(
+      "general-settings-form"
+    );
+    if (generalSettingsForm) {
+      generalSettingsForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        showNotification("General settings saved successfully", "success");
+      });
+    }
+
+    // Registration settings form
+    const registrationSettingsForm = document.getElementById(
+      "registration-settings-form"
+    );
+    if (registrationSettingsForm) {
+      registrationSettingsForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        showNotification("Registration settings saved successfully", "success");
+      });
+    }
+
+    // Add admin form
+    const addAdminForm = document.getElementById("add-admin-form");
+    if (addAdminForm) {
+      addAdminForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(addAdminForm);
+        const password = formData.get("password");
+        const confirmPassword = formData.get("confirmPassword");
+
+        if (password !== confirmPassword) {
+          showNotification("Passwords do not match", "error");
+          return;
+        }
+
+        // Register new admin
+        const result = await authService.register({
+          name: formData.get("fullName"),
+          email: formData.get("email"),
+          password: formData.get("password"),
+          role: "admin",
+        });
+
+        if (result.success) {
+          showNotification("Administrator added successfully", "success");
+          addAdminForm.reset();
+
+          // Reload users data
+          this.loadUsersData();
+        } else {
+          showNotification(result.message, "error");
+        }
+      });
+    }
+  }
+}
+
+// Initialize admin service when DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  new AdminService();
+});
+
+export default AdminService;
