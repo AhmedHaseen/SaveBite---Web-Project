@@ -414,3 +414,420 @@ class AdminService {
             `;
     }
   }
+
+  /**
+   * Show user details modal
+   * @param {string} userId - User ID
+   */
+  async showUserDetails(userId) {
+    const modal = document.getElementById("user-details-modal");
+    const detailsContainer = document.getElementById("user-details");
+
+    if (!modal || !detailsContainer) {
+      console.error("User details modal or container not found");
+      return;
+    }
+
+    // Show loading state
+    detailsContainer.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+        `;
+
+    openModal(modal);
+
+    try {
+      // Get user details
+      const result = await apiService.getUserById(userId);
+
+      if (!result.success) {
+        detailsContainer.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error</h3>
+                        <p>${result.message}</p>
+                    </div>
+                `;
+        return;
+      }
+
+      const user = result.user;
+
+      // Format role class
+      let roleClass = "";
+      switch (user.role) {
+        case "admin":
+          roleClass = "admin";
+          break;
+        case "business":
+          roleClass = "business";
+          break;
+        case "customer":
+          roleClass = "customer";
+          break;
+      }
+
+      // Create user details HTML
+      let userDetailsHTML = `
+                <div class="user-details-header">
+                    <div class="user-details-avatar">
+                        <i class="fas ${
+                          user.role === "admin"
+                            ? "fa-user-shield"
+                            : user.role === "business"
+                            ? "fa-store"
+                            : "fa-user"
+                        }"></i>
+                    </div>
+                    <div class="user-details-info">
+                        <h3>${
+                          user.role === "business"
+                            ? user.businessName || user.name
+                            : user.name
+                        }</h3>
+                        <span class="user-details-role ${roleClass}">${
+        user.role.charAt(0).toUpperCase() + user.role.slice(1)
+      }</span>
+                        <p>${user.email}</p>
+                    </div>
+                </div>
+                
+                <div class="user-details-section">
+                    <h4>Basic Information</h4>
+                    <div class="user-details-item">
+                        <span class="user-details-label">Name</span>
+                        <span class="user-details-value">${user.name}</span>
+                    </div>
+                    <div class="user-details-item">
+                        <span class="user-details-label">Email</span>
+                        <span class="user-details-value">${user.email}</span>
+                    </div>
+                    <div class="user-details-item">
+                        <span class="user-details-label">Status</span>
+                        <span class="user-details-value">
+                            <span class="user-status ${user.status}">${
+        user.status.charAt(0).toUpperCase() + user.status.slice(1)
+      }</span>
+                        </span>
+                    </div>
+                    <div class="user-details-item">
+                        <span class="user-details-label">Joined</span>
+                        <span class="user-details-value">${formatDate(
+                          user.createdAt
+                        )}</span>
+                    </div>
+                </div>
+            `;
+
+      // Add business-specific information if applicable
+      if (user.role === "business") {
+        userDetailsHTML += `
+                    <div class="user-details-section">
+                        <h4>Business Information</h4>
+                        <div class="user-details-item">
+                            <span class="user-details-label">Business Name</span>
+                            <span class="user-details-value">${
+                              user.businessName || "Not provided"
+                            }</span>
+                        </div>
+                        <div class="user-details-item">
+                            <span class="user-details-label">Business Type</span>
+                            <span class="user-details-value">${
+                              this.formatBusinessType(user.businessType) ||
+                              "Not provided"
+                            }</span>
+                        </div>
+                        <div class="user-details-item">
+                            <span class="user-details-label">Address</span>
+                            <span class="user-details-value">${
+                              user.businessAddress || "Not provided"
+                            }</span>
+                        </div>
+                        <div class="user-details-item">
+                            <span class="user-details-label">Description</span>
+                            <span class="user-details-value">${
+                              user.businessDescription || "Not provided"
+                            }</span>
+                        </div>
+                    </div>
+                `;
+      }
+
+      // Add action buttons
+      const currentUser = authService.getCurrentUser();
+      const isSelf = currentUser && currentUser.id === user.id;
+
+      if (!isSelf) {
+        userDetailsHTML += `
+                    <div class="user-details-actions">
+                        ${
+                          user.status === "blocked"
+                            ? `
+                            <button class="btn btn-primary activate-user" data-id="${user.id}">Activate User</button>
+                        `
+                            : `
+                            <button class="btn btn-danger block-user" data-id="${user.id}">Block User</button>
+                        `
+                        }
+                    </div>
+                `;
+      }
+
+      // Update details container
+      detailsContainer.innerHTML = userDetailsHTML;
+
+      // Add event listeners
+      const activateButton = detailsContainer.querySelector(".activate-user");
+      const blockButton = detailsContainer.querySelector(".block-user");
+
+      if (activateButton) {
+        activateButton.addEventListener("click", async () => {
+          const result = await this.updateUserStatus(userId, "active");
+          if (result) {
+            modal.querySelector(".modal-close").click();
+          }
+        });
+      }
+
+      if (blockButton) {
+        blockButton.addEventListener("click", async () => {
+          const result = await this.updateUserStatus(userId, "blocked");
+          if (result) {
+            modal.querySelector(".modal-close").click();
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error showing user details:", error);
+      detailsContainer.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading user details</h3>
+                    <p>Please try again later</p>
+                </div>
+            `;
+    }
+  }
+
+  /**
+   * Format business type for display
+   * @param {string} type - Business type
+   * @returns {string} Formatted business type
+   */
+  formatBusinessType(type) {
+    if (!type) return "";
+
+    switch (type) {
+      case "restaurant":
+        return "Restaurant";
+      case "cafe":
+        return "Café";
+      case "bakery":
+        return "Bakery";
+      case "grocery":
+        return "Grocery Store";
+      case "other":
+        return "Other";
+      default:
+        return type.charAt(0).toUpperCase() + type.slice(1);
+    }
+  }
+
+  /**
+   * Update user status (block/unblock)
+   * @param {string} userId - User ID
+   * @param {string} status - New status
+   * @returns {Promise<boolean>} Success status
+   */
+  async updateUserStatus(userId, status) {
+    try {
+      // Confirm status change
+      const confirmMessage =
+        status === "blocked"
+          ? "Are you sure you want to block this user? They will not be able to log in."
+          : "Are you sure you want to activate this user?";
+
+      if (!confirm(confirmMessage)) {
+        return false;
+      }
+
+      const result = await apiService.updateUserStatus(userId, status);
+
+      if (result.success) {
+        showNotification(result.message, "success");
+
+        // Reload users data
+        this.loadUsersData();
+
+        return true;
+      } else {
+        showNotification(result.message, "error");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      showNotification("Error updating user status", "error");
+      return false;
+    }
+  }
+
+  /**
+   * Load listings tab data
+   */
+  async loadListingsData() {
+    const listingsContainer = document.getElementById(
+      "admin-listings-container"
+    );
+    if (!listingsContainer) return;
+
+    // Show loading state
+    listingsContainer.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+        `;
+
+    try {
+      // Get filter value
+      const filter = document.getElementById("admin-listings-filter");
+      const filterValue = filter ? filter.value : "all";
+
+      // Get search value
+      const search = document.getElementById("admin-listings-search");
+      const searchValue = search ? search.value : "";
+
+      // Get listings
+      const listings = await apiService.getListings({
+        status: filterValue !== "all" ? filterValue : "",
+        search: searchValue,
+      });
+
+      if (listings.length === 0) {
+        listingsContainer.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h3>No listings found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                `;
+        return;
+      }
+
+      // Generate listings HTML
+      let listingsHTML = "";
+
+      listings.forEach((listing) => {
+        // Get status class
+        let statusClass = "";
+        let statusText = "";
+
+        if (listing.status === "active") {
+          if (new Date(listing.expiryDate) < new Date()) {
+            statusClass = "expired";
+            statusText = "Expired";
+          } else {
+            statusClass = "active";
+            statusText = "Active";
+          }
+        } else if (listing.status === "sold-out") {
+          statusClass = "sold-out";
+          statusText = "Sold Out";
+        } else {
+          statusClass = "expired";
+          statusText = "Expired";
+        }
+
+        // Calculate discount
+        const discountPercentage = Math.round(
+          ((listing.originalPrice - listing.discountedPrice) /
+            listing.originalPrice) *
+            100
+        );
+
+        listingsHTML += `
+                    <div class="admin-listing-card">
+                        <div class="admin-listing-image">
+                            <img src="${listing.imageUrl}" alt="${
+          listing.foodName
+        }">
+                        </div>
+                        <div class="admin-listing-content">
+                            <div class="admin-listing-header">
+                                <h3 class="admin-listing-title">${
+                                  listing.foodName
+                                }</h3>
+                                <span class="admin-listing-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <p class="admin-listing-business">
+                                <i class="fas fa-store"></i> ${
+                                  listing.businessName
+                                }
+                            </p>
+                            <div class="admin-listing-details">
+                                <span class="admin-listing-expiry">
+                                    <i class="fas fa-calendar-alt"></i> ${formatDate(
+                                      listing.expiryDate
+                                    )}
+                                </span>
+                                <span class="admin-listing-quantity">
+                                    <i class="fas fa-cubes"></i> ${
+                                      listing.quantity
+                                    } left
+                                </span>
+                            </div>
+                            <div class="admin-listing-price">
+                                <div class="admin-listing-price-group">
+                                    <span class="admin-original-price">${formatPrice(
+                                      listing.originalPrice
+                                    )}</span>
+                                    <span class="admin-discounted-price">${formatPrice(
+                                      listing.discountedPrice
+                                    )}</span>
+                                </div>
+                                <span class="listing-detail-discount">-${discountPercentage}%</span>
+                            </div>
+                            <div class="admin-listing-actions">
+                                <button class="view" data-id="${
+                                  listing.id
+                                }"><i class="fas fa-eye"></i></button>
+                                <button class="remove" data-id="${
+                                  listing.id
+                                }"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+      });
+
+      // Update listings container
+      listingsContainer.innerHTML = listingsHTML;
+
+      // Add event listeners
+      const viewButtons = listingsContainer.querySelectorAll(".view");
+      const removeButtons = listingsContainer.querySelectorAll(".remove");
+
+      viewButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const listingId = button.getAttribute("data-id");
+          this.viewListing(listingId);
+        });
+      });
+
+      removeButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const listingId = button.getAttribute("data-id");
+          await this.removeListing(listingId);
+        });
+      });
+    } catch (error) {
+      console.error("Error loading listings:", error);
+      listingsContainer.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading listings</h3>
+                    <p>Please try again later</p>
+                </div>
+            `;
+    }
+  }
