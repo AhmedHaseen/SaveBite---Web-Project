@@ -81,6 +81,7 @@
       </aside>
 
         <main class="admin-content">
+            <!-- Dashboard Tab -->
             <section id="dashboard" class="admin-tab active">
           <h2>Admin Dashboard</h2>
           <div class="dashboard-stats">
@@ -185,6 +186,217 @@
             </div>
           </div>
         </section>
+
+        <!-- Users Tab -->
+        <section id="users" class="admin-tab">
+          <div class="tab-header">
+            <h2>User Management</h2>
+          </div>
+
+            <div class="users-controls">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="users-search"
+                placeholder="Search users..."
+              />
+              <button><i class="fas fa-search"></i></button>
+            </div>
+
+            <div class="filter-select">
+              <select id="users-filter">
+                <option value="all">All Users</option>
+                <option value="customers">Customers</option>
+                <option value="businesses">Businesses</option>
+                <option value="admins">Admins</option>
+              </select>
+            </div>
+          </div>
+
+            <div class="users-table-container">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <!-- Will be populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+            <!-- Listings Tab -->
+        <section id="listings" class="admin-tab">
+          <div class="tab-header">
+            <h2>All Listings</h2>
+          </div>
+
+          <div class="listings-controls">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="admin-listings-search"
+                placeholder="Search listings..."
+              />
+              <button><i class="fas fa-search"></i></button>
+            </div>
+
+            <div class="filter-select">
+              <select id="admin-listings-filter">
+                <option value="all">All Listings</option>
+                <option value="active">Active</option>
+                <option value="sold">Sold Out</option>
+                <option value="expired">Expired</option>
+              </select>
+            </div>
+          </div>
+
+            <div class="admin-listings-container" id="admin-listings-container">
+            <!-- Will be populated dynamically -->
+          </div>
+        </section>
+
+            <!-- Orders Tab -->
+        <section id="orders" class="admin-tab">
+          <div class="tab-header">
+            <h2>All Orders</h2>
+          </div>
+
+          <div class="orders-controls">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="admin-orders-search"
+                placeholder="Search orders..."
+              />
+              <button><i class="fas fa-search"></i></button>
+            </div>
+
+              <div class="filter-select">
+              <select id="admin-orders-filter">
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="admin-orders-container" id="admin-orders-container">
+            <!-- Will be populated dynamically -->
+          </div>
+        </section>
+
+            <!-- Reports Tab -->
+        <section id="reports" class="admin-tab">
+          <h2>Reports</h2>
+
+          <div class="reports-filters">
+            <div class="date-range">
+              <label for="date-from">From:</label>
+              <input type="date" id="date-from" />
+              <label for="date-to">To:</label>
+              <input type="date" id="date-to" />
+              <button id="apply-date-range" class="btn btn-small">Apply</button>
+            </div>
+          </div>
+
+          <div class="reports-grid">
+            <div class="report-card">
+              <h3>Food Waste Reduction</h3>
+              <div class="report-value">
+                <span id="food-waste-reduced">1,500</span>
+                <span class="report-unit">kg</span>
+              </div>
+              <div class="report-comparison positive">
+                <i class="fas fa-arrow-up"></i> 15% from last month
+              </div>
+            </div>
+
+            <div class="report-card">
+              <h3>CO₂ Emissions Avoided</h3>
+              <div class="report-value">
+                <span id="co2-emissions-avoided">3,750</span>
+                <span class="report-unit">kg</span>
+              </div>
+              <div class="report-comparison positive">
+                <i class="fas fa-arrow-up"></i> 12% from last month
+              </div>
+            </div>
+
+            <div class="report-card">
+              <h3>Total Revenue</h3>
+              <div class="report-value">
+                <span class="report-currency">$</span>
+                <span id="total-revenue">12,450</span>
+              </div>
+              <div class="report-comparison positive">
+                <i class="fas fa-arrow-up"></i> 8% from last month
+              </div>
+            </div>
+
+            <div class="report-card">
+              <h3>User Growth</h3>
+              <div class="report-value">
+                <span id="user-growth">245</span>
+                <span class="report-unit">new users</span>
+              </div>
+              <div class="report-comparison positive">
+                <i class="fas fa-arrow-up"></i> 5% from last month
+              </div>
+            </div>
+          </div>
+
+          <div class="detailed-reports">
+            <div class="detailed-report">
+              <h3>Top Businesses by Sales</h3>
+              <div class="report-table-container">
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>Business</th>
+                      <th>Orders</th>
+                      <th>Items Sold</th>
+                      <th>Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody id="top-businesses-table">
+                    <!-- Will be populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="detailed-report">
+              <h3>Popular Food Categories</h3>
+              <div class="report-table-container">
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Items Sold</th>
+                      <th>% of Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="popular-categories-table">
+                    <!-- Will be populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+            
         </main>
 
         
