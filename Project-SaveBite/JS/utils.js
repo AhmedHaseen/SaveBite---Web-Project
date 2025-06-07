@@ -230,3 +230,180 @@ function showNotification(message, type = "info", duration = 3000) {
     }
   }
 }
+/*
+ * Toggle password visibility in password fields
+ * @param {HTMLElement} toggleButton - The toggle button element
+ * @param {HTMLElement} passwordInput - The password input element
+ */
+function setupPasswordToggle(toggleButton, passwordInput) {
+  if (!toggleButton || !passwordInput) return;
+
+  toggleButton.addEventListener("click", () => {
+    const icon = toggleButton.querySelector("i");
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  });
+}
+
+/*
+ * Set up mobile navigation menu toggle
+ */
+function setupMobileNav() {
+  const mobileMenuToggle = document.getElementById("mobile-menu-toggle");
+  const navLinks = document.getElementById("nav-links");
+
+  if (!mobileMenuToggle || !navLinks) return;
+
+  mobileMenuToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("active");
+
+    const icon = mobileMenuToggle.querySelector("i");
+    if (navLinks.classList.contains("active")) {
+      icon.classList.remove("fa-bars");
+      icon.classList.add("fa-times");
+    } else {
+      icon.classList.remove("fa-times");
+      icon.classList.add("fa-bars");
+    }
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener("click", (event) => {
+    if (
+      !mobileMenuToggle.contains(event.target) &&
+      !navLinks.contains(event.target)
+    ) {
+      navLinks.classList.remove("active");
+      const icon = mobileMenuToggle.querySelector("i");
+      icon.classList.remove("fa-times");
+      icon.classList.add("fa-bars");
+    }
+  });
+}
+
+/*
+ * Setup modal functionality
+ * @param {string} modalId - The ID of the modal element
+ * @param {string} openTriggerId - The ID of the element that opens the modal (optional)
+ */
+function setupModal(modalId, openTriggerId = null) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+
+  // Set up open trigger if provided
+  if (openTriggerId) {
+    const openTrigger = document.getElementById(openTriggerId);
+    if (openTrigger) {
+      openTrigger.addEventListener("click", () => {
+        openModal(modal);
+      });
+    }
+  }
+
+  // Set up close button(s)
+  const closeButtons = modal.querySelectorAll(".modal-close");
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      closeModal(modal);
+    });
+  });
+
+  // Close when clicking outside modal content
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal(modal);
+    }
+  });
+
+  // Close when pressing Escape key
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modal.classList.contains("show")) {
+      closeModal(modal);
+    }
+  });
+}
+
+/*
+ * Open a modal
+ * @param {HTMLElement} modal - The modal element to open
+ */
+function openModal(modal) {
+  modal.classList.add("show");
+  document.body.style.overflow = "hidden"; // Prevent background scrolling
+
+  setTimeout(() => {
+    const modalContent = modal.querySelector(".modal-content");
+    if (modalContent) {
+      modalContent.style.transform = "translateY(0)";
+      modalContent.style.opacity = "1";
+    }
+  }, 10);
+}
+
+/*
+ * Close a modal
+ * @param {HTMLElement} modal - The modal element to close
+ */
+function closeModal(modal) {
+  const modalContent = modal.querySelector(".modal-content");
+  if (modalContent) {
+    modalContent.style.transform = "translateY(-20px)";
+    modalContent.style.opacity = "0";
+  }
+
+  setTimeout(() => {
+    modal.classList.remove("show");
+    document.body.style.overflow = ""; // Restore scrolling
+  }, 300);
+}
+
+/*
+ * Initialize common elements and functionality across all pages
+ */
+function initCommon() {
+  // Setup mobile navigation
+  setupMobileNav();
+
+  // Setup password toggles
+  const passwordToggles = document.querySelectorAll(".password-toggle");
+  passwordToggles.forEach((toggle) => {
+    const input = toggle.parentElement.querySelector('input[type="password"]');
+    if (input) {
+      setupPasswordToggle(toggle, input);
+    }
+  });
+
+  // Initialize all modals
+  const modals = document.querySelectorAll(".modal");
+  modals.forEach((modal) => {
+    setupModal(modal.id);
+  });
+}
+
+// Initialize common elements when DOM is loaded
+document.addEventListener("DOMContentLoaded", initCommon);
+
+// Export utility functions
+export {
+  formatDate,
+  formatPrice,
+  calculateDiscount,
+  generateId,
+  isExpired,
+  formatRelativeTime,
+  formatTimeUntilExpiry,
+  showNotification,
+  setupPasswordToggle,
+  setupMobileNav,
+  setupModal,
+  openModal,
+  closeModal,
+};
