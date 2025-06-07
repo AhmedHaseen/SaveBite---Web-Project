@@ -294,6 +294,332 @@ class DashboardService {
     }
   }
 
+ /**
+   * Load orders tab data
+   */
+  async loadOrdersData() {
+    const ordersContainer = document.getElementById("orders-container");
+    const noOrders = document.getElementById("no-orders");
 
-  
+    if (!ordersContainer) return;
+
+    // Show loading state
+    ordersContainer.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+        `;
+
+    try {
+      // Get current user
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) return;
+
+      // Get orders for current business
+      const filter = document.getElementById("orders-filter");
+      const filterValue = filter ? filter.value : "all";
+
+      const orders = await apiService.getOrders({
+        businessId: currentUser.id,
+        status: filterValue,
+      });
+
+      if (orders.length === 0) {
+        // Show no orders message
+        if (noOrders) noOrders.style.display = "block";
+        ordersContainer.innerHTML = "";
+        return;
+      }
+
+      // Hide no orders message
+      if (noOrders) noOrders.style.display = "none";
+
+      // Generate orders HTML
+      let ordersHTML = "";
+
+      orders.forEach((order) => {
+        // Filter items to only include those from this business
+        const businessItems = order.items.filter(
+          (item) => item.businessId === currentUser.id
+        );
+
+        // Calculate business subtotal
+        const businessSubtotal = businessItems.reduce(
+          (total, item) => total + item.discountedPrice * item.quantity,
+          0
+        );
+
+        // Get status class
+        let statusClass = "";
+        switch (order.status) {
+          case "pending":
+            statusClass = "pending";
+            break;
+          case "completed":
+            statusClass = "completed";
+            break;
+          case "cancelled":
+            statusClass = "cancelled";
+            break;
+        }
+
+        ordersHTML += `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <span class="order-id">Order #${order.id
+                              .substring(0, 8)
+                              .toUpperCase()}</span>
+                            <span class="order-status ${statusClass}">${
+          order.status.charAt(0).toUpperCase() + order.status.slice(1)
+        }</span>
+                        </div>
+                        
+                        <div class="order-items">
+                            ${businessItems
+                              .map(
+                                (item) => `
+                                <div class="order-item">
+                                    <div class="order-item-info">
+                                        <span class="order-item-name">${
+                                          item.name
+                                        }</span>
+                                        <small>Qty: ${item.quantity}</small>
+                                    </div>
+                                    <span class="order-item-price">${formatPrice(
+                                      item.discountedPrice * item.quantity
+                                    )}</span>
+                                </div>
+                            `
+                              )
+                              .join("")}
+                        </div>
+                        
+                        <div class="order-subtotal">
+                            <strong>Subtotal:</strong> ${formatPrice(
+                              businessSubtotal
+                            )}
+                        </div>
+                        
+                        <div class="order-customer">
+                            <h4><i class="fas fa-user"></i> Customer Information</h4>
+                            <p>${order.customerName}</p>
+                            <p>${order.customerEmail}</p>
+                            <p>${order.customerPhone}</p>
+                            <p><strong>Pickup Time:</strong> ${formatDate(
+                              order.pickupTime,
+                              true
+                            )}</p>
+                            ${
+                              order.notes
+                                ? `<p><strong>Notes:</strong> ${order.notes}</p>`
+                                : ""
+                            }
+                        </div>
+                        
+                        ${
+                          order.status === "pending"
+                            ? `
+                            <div class="order-actions">
+                                <button class="btn btn-primary complete-order" data-id="${order.id}">Mark as Completed</button>
+                                <button class="btn btn-secondary cancel-order" data-id="${order.id}">Cancel Order</button>
+                            </div>
+                        `
+                            : ""
+                        }
+                    </div>
+                `;
+      });
+
+      // Update orders container
+      ordersContainer.innerHTML = ordersHTML;
+
+      // Add event listeners
+      const completeButtons =
+        ordersContainer.querySelectorAll(".complete-order");
+      const cancelButtons = ordersContainer.querySelectorAll(".cancel-order");
+
+      completeButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const orderId = button.getAttribute("data-id");
+          await this.updateOrderStatus(orderId, "completed");
+        });
+      });
+
+      cancelButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const orderId = button.getAttribute("data-id");
+          await this.updateOrderStatus(orderId, "cancelled");
+        });
+      });
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      ordersContainer.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading orders</h3>
+                    <p>Please try again later</p>
+                </div>
+            `;
+    }
+  }
+
+  /**
+   * Update order status
+   * @param {string} orderId - Order ID
+   * @param {string} status - New status
+   */
+  async updateOrderStatus(orderId, status) {
+    try {
+      // Confirm status change
+      const confirmMessage =
+        status === "completed"
+          ? "Are you sure you want to mark this order as completed?"
+          : "Are you sure you want to cancel this order?";
+
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      const result = await apiService.updateOrderStatus(orderId, status);
+
+      if (result.success) {
+        showNotification(
+          `Order ${
+            status === "completed" ? "completed" : "cancelled"
+          } successfully`,
+          "success"
+        );
+
+        // Reload orders
+        this.loadOrdersData();
+
+        // Reload dashboard data
+        this.loadDashboardData();
+      } else {
+        showNotification(result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      showNotification("Error updating order status", "error");
+    }
+  }
+
+  /**
+   * Load settings tab data
+   */
+  loadSettingsData() {
+    // Get current user
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) return;
+
+    // Populate form fields
+    const businessNameInput = document.getElementById("business-name");
+    const businessTypeInput = document.getElementById("business-type");
+    const businessAddressInput = document.getElementById("business-address");
+    const businessDescriptionInput = document.getElementById(
+      "business-description"
+    );
+    const contactNameInput = document.getElementById("contact-name");
+    const contactEmailInput = document.getElementById("contact-email");
+    const contactPhoneInput = document.getElementById("contact-phone");
+
+    if (businessNameInput)
+      businessNameInput.value = currentUser.businessName || "";
+    if (businessTypeInput)
+      businessTypeInput.value = currentUser.businessType || "other";
+    if (businessAddressInput)
+      businessAddressInput.value = currentUser.businessAddress || "";
+    if (businessDescriptionInput)
+      businessDescriptionInput.value = currentUser.businessDescription || "";
+    if (contactNameInput) contactNameInput.value = currentUser.name || "";
+    if (contactEmailInput) contactEmailInput.value = currentUser.email || "";
+    if (contactPhoneInput) contactPhoneInput.value = currentUser.phone || "";
+
+    // Set up form submission
+    const settingsForm = document.getElementById("business-settings-form");
+    if (settingsForm) {
+      settingsForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await this.saveSettings(settingsForm);
+      });
+    }
+  }
+
+  /**
+   * Save settings form
+   * @param {HTMLFormElement} form - Settings form
+   */
+  async saveSettings(form) {
+    try {
+      // Get current user
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) {
+        showNotification("Please log in to save settings", "error");
+        return;
+      }
+
+      // Get form data
+      const formData = new FormData(form);
+
+      // Create updated user data
+      const userData = {
+        name: formData.get("contactName"),
+        email: formData.get("contactEmail"),
+        phone: formData.get("contactPhone"),
+        businessName: formData.get("businessName"),
+        businessType: formData.get("businessType"),
+        businessAddress: formData.get("businessAddress"),
+        businessDescription: formData.get("businessDescription"),
+      };
+
+      // Check if password is being changed
+      const currentPassword = formData.get("currentPassword");
+      const newPassword = formData.get("newPassword");
+      const confirmPassword = formData.get("confirmPassword");
+
+      if (currentPassword && newPassword) {
+        // Validate passwords
+        if (newPassword !== confirmPassword) {
+          showNotification("New passwords do not match", "error");
+          return;
+        }
+
+        if (currentPassword !== currentUser.password) {
+          showNotification("Current password is incorrect", "error");
+          return;
+        }
+
+        // Update password
+        userData.password = newPassword;
+      }
+
+      // Update user profile
+      const result = await apiService.updateUserProfile(
+        currentUser.id,
+        userData
+      );
+
+      if (result.success) {
+        showNotification("Settings saved successfully", "success");
+
+        // Update user info in the sidebar
+        this.updateUserInfo(result.user);
+
+        // Reset password fields
+        const passwordFields = form.querySelectorAll('input[type="password"]');
+        passwordFields.forEach((field) => (field.value = ""));
+      } else {
+        showNotification(result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      showNotification("Error saving settings", "error");
+    }
+  } 
 }
+// Initialize dashboard service when DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  new DashboardService();
+});
+
+export default DashboardService;
