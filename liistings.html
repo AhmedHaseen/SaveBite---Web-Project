@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - SaveBite</title>
+    <title>Food Listings - SaveBite</title>
     <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/auth.css" />
+    <link rel="stylesheet" href="css/listings.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -16,6 +16,7 @@
       <div class="container header-container">
         <div class="logo">
           <a href="index.html">
+            <img src="images/logo.png" alt="SaveBite Logo" />
             <h1><span class="highlight">Save</span>Bite</h1>
           </a>
         </div>
@@ -25,7 +26,7 @@
           </button>
           <ul class="nav-links" id="nav-links">
             <li><a href="index.html">Home</a></li>
-            <li><a href="listings.html">Food Listings</a></li>
+            <li><a href="listings.html" class="active">Food Listings</a></li>
             <li
               id="dashboard-link"
               class="auth-required business-only admin-only"
@@ -41,7 +42,7 @@
               >
             </li>
             <li id="login-link" class="auth-not-required">
-              <a href="login.html" class="active">Login</a>
+              <a href="login.html">Login</a>
             </li>
             <li id="register-link" class="auth-not-required">
               <a href="register.html">Register</a>
@@ -54,50 +55,84 @@
       </div>
     </header>
 
-    <main class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <h2>Welcome Back</h2>
-          <p>Sign in to continue to SaveBite</p>
+    <main class="listings-container">
+      <section class="listings-header">
+        <div class="container">
+          <h1>Food Listings</h1>
+          <p>
+            Browse available food from local businesses at discounted prices
+          </p>
         </div>
-        <form id="login-form" class="auth-form">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required />
-          </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <div class="password-input">
-              <input type="password" id="password" name="password" required />
-              <button
-                type="button"
-                class="password-toggle"
-                id="password-toggle"
-              >
-                <i class="fas fa-eye"></i>
+      </section>
+
+      <section class="listings-content">
+        <div class="container">
+          <div class="listings-filters">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="Search for food..."
+              />
+              <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+
+            <div class="filter-controls">
+              <div class="filter-group">
+                <label for="category-filter">Category:</label>
+                <select id="category-filter">
+                  <option value="all">All Categories</option>
+                  <option value="meals">Prepared Meals</option>
+                  <option value="bakery">Bakery</option>
+                  <option value="produce">Produce</option>
+                  <option value="dairy">Dairy</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="sort-by">Sort By:</label>
+                <select id="sort-by">
+                  <option value="expiry">Expiry Date (Soonest)</option>
+                  <option value="price-asc">Price (Low to High)</option>
+                  <option value="price-desc">Price (High to Low)</option>
+                  <option value="discount">Discount (Highest)</option>
+                </select>
+              </div>
+
+              <button id="filter-reset" class="btn btn-small">
+                Reset Filters
               </button>
             </div>
           </div>
-          <div class="form-group remember-me">
-            <label class="checkbox-container">
-              <input type="checkbox" id="remember" />
-              <span class="checkmark"></span>
-              Remember me
-            </label>
-            <a href="#" class="forgot-password">Forgot password?</a>
+
+          <div class="listings-results">
+            <div class="listings-grid" id="listings-container">
+              <!-- Listings will be populated dynamically -->
+              <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+              </div>
+            </div>
+
+            <div class="no-results" id="no-results" style="display: none">
+              <i class="fas fa-search"></i>
+              <h3>No listings found</h3>
+              <p>Try adjusting your search or filters</p>
+            </div>
           </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary btn-block">
-              Login
-            </button>
-          </div>
-          <div class="auth-message" id="login-message"></div>
-        </form>
-        <div class="auth-footer">
-          <p>Don't have an account? <a href="register.html">Register</a></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Listing Detail Modal -->
+    <div id="listing-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <div class="listing-detail" id="listing-detail">
+          <!-- Listing detail will be populated dynamically -->
         </div>
       </div>
-    </main>
+    </div>
 
     <footer>
       <div class="container">
@@ -135,5 +170,7 @@
     <script src="js/utils.js" type="module"></script>
     <script src="js/auth.js" type="module"></script>
     <script src="js/api.js" type="module"></script>
+    <script src="js/listing.js" type="module"></script>
+    <script src="js/cart.js" type="module"></script>
   </body>
 </html>
